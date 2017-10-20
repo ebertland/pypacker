@@ -206,6 +206,9 @@ class Packet(object, metaclass=MetaPacket):
 		buf -- bytestring to be dissected
 		return -- header length
 		"""
+		print("TRACE: Entered _dissect() for object type {}".format(type(self)))
+		print(self._header_len)
+
 		# _dissect(...) was not overwritten: no changes to header, return original header length
 		return self._header_len
 
@@ -256,14 +259,18 @@ class Packet(object, metaclass=MetaPacket):
 		Return raw data bytes or handler bytes (including all upper layers) if present.
 		This is the same as calling bin() but excluding this header and without resetting changed-status.
 		"""
+		print("TRACE: Entered _get_bodybytes() for object type {}".format(type(self)))
 		if self._lazy_handler_data is not None:
+			print("TRACE: Do \"self._lazy_handler_data[2]\"")
 			# no need to parse: raw bytes for all upper layers
 			return self._lazy_handler_data[2]
 		if self._bodytypename is not None:
+			print("TRACE: Do \"hndl._pack_header() + hndl._get_bodybytes()\"")
 			# some handler was set
 			hndl = self.__getattribute__(self._bodytypename)
 			return hndl._pack_header() + hndl._get_bodybytes()
 		# return raw bytes
+		print("TRACE: Do \"self._body_bytes\"")
 		return self._body_bytes
 
 	def _set_bodybytes(self, value):
@@ -779,6 +786,8 @@ class Packet(object, metaclass=MetaPacket):
 
 		update_auto_fields -- if True auto-update fields like checksums, else leave them be
 		"""
+		print("TRACE: Entered bin() for object type {}".format(type(self)))
+
 		if update_auto_fields:
 			self._update_fields()
 
@@ -786,12 +795,15 @@ class Packet(object, metaclass=MetaPacket):
 		# preserve change status until we got all data of all sub-handlers
 		# needed for eg IP (changed) -> TCP (check changed for sum).
 		if self._lazy_handler_data is not None:
+			print("TRACE: Do \"self._lazy_handler_data[2]\"")
 			# no need to parse, just take lazy handler data bytes
 			body_tmp = self._lazy_handler_data[2]
 		elif self._bodytypename is not None:
+			print("TRACE: Do \"self._get_bodyhandler().bin(update_auto_fields=update_auto_fields)\"")
 			# handler already parsed
 			body_tmp = self._get_bodyhandler().bin(update_auto_fields=update_auto_fields)
 		else:
+			print("TRACE: Do \"self._body_bytes\"")
 			# raw bytes
 			body_tmp = self._body_bytes
 		header_tmp = self._pack_header()
@@ -834,17 +846,22 @@ class Packet(object, metaclass=MetaPacket):
 		"""
 		Return header as byte string.
 		"""
+		print("TRACE: Entered _pack_header() for object type {}".format(type(self)))
+
 		if not self._header_changed:
+			print("TRACE: Do \"self._header_cached\"")
 			# return cached data if nothing changed
 			# logger.warning("returning cached header (hdr changed=%s): %s->%s",
 			# self._header_changed, self.__class__.__name__, self._header_cached)
 			return self._header_cached
 
 		if not self._unpacked:
+			print("TRACE: Do \"self._unpack()\"")
 			# this happens on: Packet(b"bytes") -> only changes to TriggerList. We need to unpack buffer values
 			# to re-read them for header packing
 			self._unpack()
 		elif self._header_format_changed:
+			print("TRACE: Do \"self._update_header_format()\"")
 			# _unpack will call _update_header_format() if needed
 			# real format needed for correct packing
 			self._update_header_format()
@@ -1201,3 +1218,10 @@ def get_ondemand_property(varname, initval_cb):
 		return self.__setattr__(varname_shadowed, value)
 
 	return property(get_var, set_var)
+
+
+# Local Variables:
+# indent-tabs-mode: 1
+# python-indent: 8
+# tab-width: 8
+# End:

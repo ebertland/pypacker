@@ -137,6 +137,7 @@ class TCP(pypacker.Packet):
 	}
 
 	def _update_fields(self):
+		print("TRACE: Entered TCP._update_fields()")
 		# TCP-checksum needs to be updated on one of the following:
 		# - this layer itself or any upper layer changed
 		# - changes to the IP-pseudoheader
@@ -210,6 +211,9 @@ class TCP(pypacker.Packet):
 
 	def _calc_sum(self):
 		"""Recalculate the TCP-checksum. This won't reset changed state."""
+
+		print("TRACE: Entered TCP._calc_sum()")
+		
 		# TCP and underwriting are freaky bitches: we need the IP pseudoheader
 		# to calculate their checksum.
 		try:
@@ -218,6 +222,7 @@ class TCP(pypacker.Packet):
 			self.sum = 0
 			# logger.debug("TCP sum recalc: IP=%d / %s / %s" % (len(src), src, dst))
 
+			print(self.body_bytes)
 			tcp_bin = self.header_bytes + self.body_bytes
 			# IP-pseudoheader, check if version 4 or 6
 			if len(src) == 4:
@@ -282,3 +287,9 @@ class TCP(pypacker.Packet):
 		sorted_list = sorted(self.ra_segments.items(), key=lambda t: t[0])
 		bts_lst = [value for key, value in sorted_list]
 		return b"".join(bts_lst)
+
+# Local Variables:
+# indent-tabs-mode: 1
+# python-indent: 8
+# tab-width: 8
+# End:
